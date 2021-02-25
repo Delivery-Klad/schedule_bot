@@ -15,6 +15,7 @@ def handler_exec(message):
 
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
+    print(str(message.from_user.id) + " " + message.text)
     if message.text[0] == "/":
         try:
             group = message.text.split(" ", 1)[1]
