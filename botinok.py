@@ -56,7 +56,7 @@ def handler_text(message):
                 if "empty" in str(e):
                     bot.send_message(message.from_user.id, "Пар не обнаружено")
         elif "week" in message.text:
-            pass
+            bot.send_message(message.from_user.id, "Пока не реализовано")
 
 
 try:
