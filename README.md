@@ -1,4 +1,4 @@
-# RTU MIREA schedule bot
+# RTU MIREA schedule bot [![Telegram](https://img.shields.io/badge/Telegram-RTU MIREA schedule-blue)](t.me/schedule_memrea_bot)
 
 Requirements:
 <pre>
@@ -15,3 +15,5 @@ Heroku variables:
 3) DB_user - database user
 4) DB_pass - database password
 </pre>
+
+![](images/500.jpg)
