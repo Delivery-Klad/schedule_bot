@@ -1,5 +1,4 @@
 import telebot
-from telebot import types
 import requests
 import psycopg2
 from googletrans import Translator
@@ -62,13 +61,14 @@ def handler_start(message):
             connect.commit()
             cursor.close()
             connect.close()
-        bot.send_message(message.from_user.id, f"<b>{sm}Камнями прошу не кидаться</b>\n"
+        bot.send_message(message.from_user.id, f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n"
                                                "/group - установить/изменить группу\n"
                                                "/today - расписание на сегодня\n"
                                                "/tomorrow - расписание на завтра\n"
                                                "/week - расписание на неделю",
-                         reply_markup=user_markup, parse_mode="HTML")
+                         reply_markup=user_markup, parse_mode="HTML", disable_web_page_preview=True)
     except Exception as er:
+        bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
         print(er)
 
 
@@ -78,6 +78,7 @@ def handler_group(message):
         group_list.append(message.from_user.id)
         bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
     except Exception as er:
+        bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
         print(er)
 
 
@@ -111,6 +112,7 @@ def handler_text(message):
             group_list.pop(group_list.index(message.from_user.id))
             return
         except Exception as er:
+            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
             print(er)
     if message.text[0] == "/" or message.text in commands:
         try:
@@ -176,6 +178,7 @@ def handler_text(message):
                     rez += "------------------------\n"
                 rez += "Сорян за странный порядок дней"
             except Exception as er:
+                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
                 print(er)
             if len(rez) > 50:
                 bot.send_message(message.from_user.id, rez, parse_mode="HTML")
