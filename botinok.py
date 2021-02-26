@@ -83,19 +83,43 @@ def handler_group(message):
 
 
 def sort_days(days):
-    """
+    cur_day = days[0]
     temp, day = [], ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     for i in days:
         if i in day:
-            index = day.index(i)
-            temp.append(index)
+            temp.append(day.index(i))
     temp.sort()
-    days = []
+    days, tmp, index = [], [], 10
     for i in temp:
         days.append(day[i])
-    print(days)
-    """
-    return days
+    for i in days:
+        if i == cur_day:
+            tmp.append(i)
+            index = days.index(i)
+        elif days.index(i) > index:
+            tmp.append(i)
+    for i in days:
+        if days.index(i) < index:
+            tmp.append(i)
+    return tmp
+
+
+def number_of_lesson(time):
+    if time[0] == "9":
+        return "1 пара"
+    elif time[:2] == "10":
+        return "2 пара"
+    elif time[:2] == "12":
+        return "3 пара"
+    elif time[:2] == "14":
+        return "4 пара"
+    elif time[:2] == "16":
+        return "5 пара"
+    elif time[:2] == "18":
+        return "6 пара"
+    elif time[:2] == "19":
+        return "7 пара"
+    return time
 
 
 @bot.message_handler(content_types=['text'])
@@ -130,10 +154,9 @@ def handler_text(message):
             lessons = res.json()
             rez = "<b>Пары сегодня:\n</b>"
             for i in lessons:
-                j = i['lesson']
-                o = i['time']
+                j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
+                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
                            f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
                 except TypeError:
                     pass
@@ -146,10 +169,9 @@ def handler_text(message):
             lessons = res.json()
             rez = "<b>Пары завтра:\n</b>"
             for i in lessons:
-                j = i['lesson']
-                o = i['time']
+                j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
+                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
                            f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
                 except TypeError:
                     pass
@@ -165,23 +187,22 @@ def handler_text(message):
                 for i in lessons:
                     days.append(i)
                 days = sort_days(days)
+                print(days)
                 for i in days:
                     rez += f"<b>{translate_text(i)}\n</b>"
                     for k in lessons[i]:
-                        j = k['lesson']
-                        o = k['time']
+                        j, o = k['lesson'], k['time']
                         try:
-                            rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>"\
+                            rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>"\
                                    f"\nНазвание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
                         except TypeError:
                             pass
                     rez += "------------------------\n"
-                rez += "Сорян за странный порядок дней"
             except Exception as er:
                 bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
                 print(er)
             if len(rez) > 50:
-                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                bot.send_message(message.from_user.id, f"{rez}Сорян за странный порядок дней", parse_mode="HTML")
             else:
                 bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
 
