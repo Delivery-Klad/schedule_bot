@@ -1,64 +1,189 @@
 import telebot
+from telebot import types
 import requests
+import psycopg2
+from googletrans import Translator
 
 bot = telebot.TeleBot("1695146161:AAEcW2Rk2Fo39dGGMvnx2Kkz7qZ_4iFygx4")
 sm = "🤖"
+group_list = []
+commands = ["сегодня", "завтра", "на неделю"]
+translator = Translator(service_urls=["translate.google.com", "translate.google.net"])
 print(bot.get_me())
 
 
+def db_connect():  # функция подключения к первой базе данных
+    try:
+        con = psycopg2.connect(
+            host="ec2-52-70-67-123.compute-1.amazonaws.com",
+            database="d68nmk23reqak4",
+            user="egnnjetsqjwwji",
+            port="5432",
+            password="dcf3bd216bd19303409eb66b094b902d35610feb0fab452eb46365592829061b"
+        )
+        cur = con.cursor()
+        return con, cur
+    except Exception as er:
+        print(er)
+
+
+def create_tables():
+    connect, cursor = db_connect()
+    cursor.execute("CREATE TABLE IF NOT EXISTS users(id INTEGER, username TEXT, first_name TEXT,"
+                   "last_name TEXT, grp TEXT)")
+    connect.commit()
+    cursor.close()
+    connect.close()
+
+
+def translate_text(text):
+    try:
+        res = translator.translate(text, dest='ru').text
+        first = res[0]
+        res = first.upper() + res[1:]
+        return res
+    except Exception as er:
+        print(er)
+        return text
+
+
 @bot.message_handler(commands=['start'])
-def handler_exec(message):
-    bot.send_message(message.from_user.id, "/today <группа> - расписание на сегодня\n"
-                                           "/tomorrow <группа> - расписание на завтра\n"
-                                           "/week <группа> - расписанире на неделю")
+def handler_start(message):
+    try:
+        user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
+        user_markup.row("сегодня", "завтра", "на неделю")
+        connect, cursor = db_connect()
+        cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+        res = cursor.fetchall()[0][0]
+        if res == 0:
+            cursor.execute(f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
+                           f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
+                           f"$taG$None$taG$)")
+            connect.commit()
+            cursor.close()
+            connect.close()
+        bot.send_message(message.from_user.id, f"<b>{sm}Камнями прошу не кидаться</b>\n"
+                                               "/group - установить/изменить группу\n"
+                                               "/today - расписание на сегодня\n"
+                                               "/tomorrow - расписание на завтра\n"
+                                               "/week - расписание на неделю",
+                         reply_markup=user_markup, parse_mode="HTML")
+    except Exception as er:
+        print(er)
+
+
+@bot.message_handler(commands=['group'])
+def handler_group(message):
+    try:
+        group_list.append(message.from_user.id)
+        bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
+    except Exception as er:
+        print(er)
+
+
+def sort_days(days):
+    """
+    temp, day = [], ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    for i in days:
+        if i in day:
+            index = day.index(i)
+            temp.append(index)
+    temp.sort()
+    days = []
+    for i in temp:
+        days.append(day[i])
+    print(days)
+    """
+    return days
 
 
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(str(message.from_user.id) + " " + message.text)
-    if message.text[0] == "/":
+    if message.from_user.id in group_list:
         try:
-            group = message.text.split(" ", 1)[1]
-        except IndexError:
+            connect, cursor = db_connect()
+            cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
+            connect.commit()
+            cursor.close()
+            connect.close()
+            bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
+            group_list.pop(group_list.index(message.from_user.id))
             return
-        if "today" in message.text:
+        except Exception as er:
+            print(er)
+    if message.text[0] == "/" or message.text in commands:
+        try:
+            connect, cursor = db_connect()
+            cursor.execute(f"SELECT grp FROM users WHERE id={message.from_user.id}")
+            group = cursor.fetchone()[0]
+            cursor.close()
+            connect.close()
+        except Exception as er:
+            print(er)
+            bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу")
+            return
+        if "today" in message.text or commands[0] in message.text:
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
             lessons = res.json()
-            rez = ""
+            rez = "<b>Пары сегодня:\n</b>"
             for i in lessons:
                 j = i['lesson']
                 o = i['time']
                 try:
-                    rez += f"Аудитория: {j['classRoom']}\nНазвание: {j['name']}\nПреподаватель: {j['teacher']}\n" \
-                           f"Тип: {j['type']}\nВремя: {o['start']} - {o['end']}\n\n"
+                    rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
+                           f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
                 except TypeError:
                     pass
-            try:
-                bot.send_message(message.from_user.id, rez)
-            except Exception as e:
-                if "empty" in str(e):
-                    bot.send_message(message.from_user.id, "Пар не обнаружено")
-        elif "tomorrow" in message.text:
+            if len(rez) > 50:
+                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+            else:
+                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+        elif "tomorrow" in message.text or commands[1] in message.text:
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
             lessons = res.json()
-            rez = ""
+            rez = "<b>Пары завтра:\n</b>"
             for i in lessons:
                 j = i['lesson']
                 o = i['time']
                 try:
-                    rez += f"Аудитория: {j['classRoom']}\nНазвание: {j['name']}\nПреподаватель: {j['teacher']}\n" \
-                           f"Тип: {j['type']}\nВремя: {o['start']} - {o['end']}\n\n"
+                    rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
+                           f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
                 except TypeError:
                     pass
+            if len(rez) > 50:
+                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+            else:
+                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+        elif "week" in message.text or commands[2] in message.text:
+            res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
+            lessons = res.json()
+            rez, days = "", []
             try:
-                bot.send_message(message.from_user.id, rez)
-            except Exception as e:
-                if "empty" in str(e):
-                    bot.send_message(message.from_user.id, "Пар не обнаружено")
-        elif "week" in message.text:
-            bot.send_message(message.from_user.id, "Пока не реализовано")
+                for i in lessons:
+                    days.append(i)
+                days = sort_days(days)
+                for i in days:
+                    rez += f"<b>{translate_text(i)}\n</b>"
+                    for k in lessons[i]:
+                        j = k['lesson']
+                        o = k['time']
+                        try:
+                            rez += f"<b>Время: {o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>"\
+                                   f"\nНазвание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
+                        except TypeError:
+                            pass
+                    rez += "------------------------\n"
+                rez += "Сорян за странный порядок дней"
+            except Exception as er:
+                print(er)
+            if len(rez) > 50:
+                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+            else:
+                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
 
 
+create_tables()
 try:
     while True:
         try:
