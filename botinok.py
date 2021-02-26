@@ -145,9 +145,11 @@ def handler_text(message):
             group = cursor.fetchone()[0]
             cursor.close()
             connect.close()
+            if group == "None":
+                bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
         except Exception as er:
             print(er)
-            bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу")
+            bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
             return
         if "today" in message.text or commands[0] in message.text:
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
@@ -187,7 +189,6 @@ def handler_text(message):
                 for i in lessons:
                     days.append(i)
                 days = sort_days(days)
-                print(days)
                 for i in days:
                     rez += f"<b>{translate_text(i)}\n</b>"
                     for k in lessons[i]:
