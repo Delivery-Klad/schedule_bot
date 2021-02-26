@@ -124,11 +124,19 @@ def number_of_lesson(time):
 
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
-    print(str(message.from_user.id) + " " + message.text)
+    print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     if message.from_user.id in group_list:
         try:
             connect, cursor = db_connect()
-            cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
+            cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+            res = cursor.fetchall()[0][0]
+            if res == 0:
+                cursor.execute(
+                    f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
+                    f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
+                    f"$taG${message.text.upper}$taG$)")
+            else:
+                cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
             connect.commit()
             cursor.close()
             connect.close()
@@ -207,15 +215,10 @@ def handler_text(message):
                 bot.send_message(message.from_user.id, f"{rez}Сорян за странный порядок дней", parse_mode="HTML")
             else:
                 bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+    else:
+        bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
 
 
-create_tables()
-connect, cursor = db_connect()
-cursor.execute("SELECT * FROM users")
-for i in cursor.fetchall():
-    print(i)
-cursor.close()
-connect.close()
 try:
     while True:
         try:
