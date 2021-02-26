@@ -87,7 +87,8 @@ def handler_start(message):
 @bot.message_handler(commands=['group'])
 def handler_group(message):
     try:
-        group_list.append(message.from_user.id)
+        if message.from_user.id not in group_list:
+            group_list.append(message.from_user.id)
         bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
     except Exception as er:
         bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
@@ -97,8 +98,7 @@ def handler_group(message):
 def sort_days(days):
     temp, day = [], ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     for i in days:
-        if i in day:
-            temp.append(day.index(i))
+        temp.append(day.index(i))
     temp.sort()
     days, tmp, index = [], [], 10
     for i in temp:
