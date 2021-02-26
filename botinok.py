@@ -183,9 +183,8 @@ def handler_text(message):
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>" \
-                           f"{j['classRoom']}</code>\nНазвание: {j['name']} ({j['type']})\nПреподаватель: " \
-                           f"{j['teacher']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} - " \
+                           f"{o['end']})</b>\n{j['name']} ({j['type']})\nПреподаватель: {j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
@@ -199,9 +198,8 @@ def handler_text(message):
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>" \
-                           f"{j['classRoom']}</code>\nНазвание: {j['name']} ({j['type']})\nПреподаватель: " \
-                           f"{j['teacher']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} - " \
+                           f"{o['end']})</b>\n{j['name']} ({j['type']})\nПреподаватель: {j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
@@ -221,8 +219,8 @@ def handler_text(message):
                     for k in lessons[i]:
                         j, o = k['lesson'], k['time']
                         try:
-                            rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: " \
-                                   f"<code>{j['classRoom']}</code>\nНазвание: {j['name']} ({j['type']})\n" \
+                            rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} -" \
+                                   f" {o['end']})</b>\n{j['name']} ({j['type']})\n" \
                                    f"Преподаватель: {j['teacher']}\n\n"
                         except TypeError:
                             pass
