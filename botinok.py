@@ -124,11 +124,46 @@ def number_of_lesson(time):
     return time
 
 
+def get_teacher_ico(name):
+    name = name.split(' ', 1)[0]
+    try:
+        if name[len(name) - 1] == "а":
+            return "👩‍🏫"
+        else:
+            return "👨‍🏫"
+    except IndexError:
+        return ""
+
+
+def get_time_ico(time):
+    try:
+        if time[0] == "9":
+            return "🕘"
+        elif time[:2] == "10":
+            return "🕦"
+        elif time[:2] == "12":
+            return "🕐"
+        elif time[:2] == "14":
+            return "🕝"
+        elif time[:2] == "16":
+            return "🕟"
+        elif time[:2] == "18":
+            return "🕕"
+        elif time[:2] == "19":
+            return "🕢"
+    except Exception as er:
+        print(er)
+        return "🕐"
+
+
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     if message.from_user.id in group_list:
         try:
+            if "/" in message.text or message.text in commands:
+                bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
+                return
             connect, cursor = db_connect()
             cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
             res = cursor.fetchall()[0][0]
@@ -166,37 +201,40 @@ def handler_text(message):
             print(er)
             bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
             return
-        if "today" in message.text or commands[0] in message.text:
+        if "today" in message.text or commands[0] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
             lessons = res.json()
             rez = "<b>Пары сегодня:\n</b>"
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} - " \
-                           f"{o['end']})</b>\n{j['name']} ({j['type']})\nПреподаватель: {j['teacher']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                           f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
+                           f"{get_teacher_ico(j['teacher'])} " \
+                           f"{j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
                 bot.send_message(message.from_user.id, rez, parse_mode="HTML")
             else:
                 bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-        elif "tomorrow" in message.text or commands[1] in message.text:
+        elif "tomorrow" in message.text or commands[1] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
             lessons = res.json()
             rez = "<b>Пары завтра:\n</b>"
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} - " \
-                           f"{o['end']})</b>\n{j['name']} ({j['type']})\nПреподаватель: {j['teacher']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                           f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
+                           f"{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
                 bot.send_message(message.from_user.id, rez, parse_mode="HTML")
             else:
                 bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-        elif "week" in message.text or commands[2] in message.text:
+        elif "week" in message.text or commands[2] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
             lessons = res.json()
             rez, days = "", []
@@ -209,9 +247,9 @@ def handler_text(message):
                     for k in lessons[i]:
                         j, o = k['lesson'], k['time']
                         try:
-                            rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>🕘{o['start']} -" \
-                                   f" {o['end']})</b>\n{j['name']} ({j['type']})\n" \
-                                   f"Преподаватель: {j['teacher']}\n\n"
+                            rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
+                                   f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
                         except TypeError:
                             pass
                     rez += "------------------------\n"
