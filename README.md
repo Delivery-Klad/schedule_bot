@@ -1,4 +1,4 @@
-# RTU MIREA schedule bot [![Telegram](https://img.shields.io/badge/Telegram-RTU MIREA schedule-blue)](t.me/schedule_memrea_bot)
+# RTU MIREA schedule bot [![My Telegram](https://img.shields.io/badge/Telegram-Schedule_bot-blue)](https://t.me/schedule_memrea_bot)
 
 Requirements:
 <pre>
