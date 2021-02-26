@@ -209,6 +209,12 @@ def handler_text(message):
 
 
 create_tables()
+connect, cursor = db_connect()
+cursor.execute("SELECT * FROM users")
+res = cursor.fetchall()
+print(res)
+cursor.close()
+connect.close()
 try:
     while True:
         try:
