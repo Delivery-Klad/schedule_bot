@@ -146,7 +146,7 @@ def handler_text(message):
                 cursor.execute(
                     f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
                     f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                    f"$taG${message.text.upper}$taG$)")
+                    f"$taG${message.text.upper()}$taG$)")
             else:
                 cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
             connect.commit()
@@ -243,6 +243,6 @@ try:
         try:
             bot.polling(none_stop=True, interval=0)  # обращение к api
         except Exception as e:
-            pass
+            print(e)
 except Exception as e:
     print(e)
