@@ -183,8 +183,9 @@ def handler_text(message):
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
-                           f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>" \
+                           f"{j['classRoom']}</code>\nТип: {j['type']}\nНазвание: {j['name']}\nПреподаватель: " \
+                           f"{j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
@@ -198,8 +199,9 @@ def handler_text(message):
             for i in lessons:
                 j, o = i['lesson'], i['time']
                 try:
-                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>\nНазв" \
-                           f"ание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
+                    rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>" \
+                           f"{j['classRoom']}</code>\nТип: {j['type']}\nНазвание: {j['name']}\nПреподаватель: " \
+                           f"{j['teacher']}\n\n"
                 except TypeError:
                     pass
             if len(rez) > 50:
@@ -219,8 +221,9 @@ def handler_text(message):
                     for k in lessons[i]:
                         j, o = k['lesson'], k['time']
                         try:
-                            rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: <code>{j['classRoom']}</code>"\
-                                   f"\nНазвание: {j['name']}\nПреподаватель: {j['teacher']}\nТип: {j['type']}\n\n"
+                            rez += f"<b>{number_of_lesson(o['start'])} 🕘{o['start']} - {o['end']}</b>\nАудитория: " \
+                                   f"<code>{j['classRoom']}</code>\nТип: {j['type']}\nНазвание: {j['name']}\n" \
+                                   f"Преподаватель: {j['teacher']}\n\n"
                         except TypeError:
                             pass
                     rez += "------------------------\n"
