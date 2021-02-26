@@ -147,6 +147,7 @@ def handler_text(message):
             connect.close()
             if group == "None":
                 bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                return
         except Exception as er:
             print(er)
             bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
@@ -211,8 +212,8 @@ def handler_text(message):
 create_tables()
 connect, cursor = db_connect()
 cursor.execute("SELECT * FROM users")
-res = cursor.fetchall()
-print(res)
+for i in cursor.fetchall():
+    print(i)
 cursor.close()
 connect.close()
 try:
