@@ -46,6 +46,18 @@ def translate_text(text):
         return text
 
 
+@bot.message_handler(commands=['db'])
+def handler_db(message):
+    if message.from_user.id == 496537969:
+        create_tables()
+        connect, cursor = db_connect()
+        cursor.execute("SELECT * FROM users")
+        for i in cursor.fetchall():
+            print(i)
+        cursor.close()
+        connect.close()
+
+
 @bot.message_handler(commands=['start'])
 def handler_start(message):
     try:
