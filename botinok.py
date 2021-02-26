@@ -95,7 +95,6 @@ def handler_group(message):
 
 
 def sort_days(days):
-    cur_day = days[0]
     temp, day = [], ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     for i in days:
         if i in day:
@@ -104,16 +103,7 @@ def sort_days(days):
     days, tmp, index = [], [], 10
     for i in temp:
         days.append(day[i])
-    for i in days:
-        if i == cur_day:
-            tmp.append(i)
-            index = days.index(i)
-        elif days.index(i) > index:
-            tmp.append(i)
-    for i in days:
-        if days.index(i) < index:
-            tmp.append(i)
-    return tmp
+    return days
 
 
 def number_of_lesson(time):
