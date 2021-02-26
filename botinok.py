@@ -229,7 +229,7 @@ def handler_text(message):
                 bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
                 print(er)
             if len(rez) > 50:
-                bot.send_message(message.from_user.id, f"{rez}Сорян за странный порядок дней", parse_mode="HTML")
+                bot.send_message(message.from_user.id, f"{rez}", parse_mode="HTML")
             else:
                 bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
     else:
