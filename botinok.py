@@ -62,7 +62,7 @@ def handler_start(message):
         user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
         user_markup.row("сегодня", "завтра", "на неделю")
         connect, cursor = db_connect()
-        cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+        cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.from_user.id}")
         res = cursor.fetchall()[0][0]
         if res == 0:
             cursor.execute(f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
@@ -103,7 +103,7 @@ def handler_group(message):
             try:
                 group = message.text.split(" ", 1)[1]
                 connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(id) FROM users WHERE id={message.chat.id}")
+                cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.chat.id}")
                 res = cursor.fetchall()[0][0]
                 if res == 0:
                     cursor.execute(
@@ -176,7 +176,7 @@ def handler_text(message):
                 bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
             connect, cursor = db_connect()
-            cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+            cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.from_user.id}")
             res = cursor.fetchall()[0][0]
             if message.chat.type == "private":
                 user_id = message.from_user.id
