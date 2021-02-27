@@ -105,7 +105,7 @@ def handler_group(message):
             try:
                 group = message.text.split(" ", 1)[1]
                 connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+                cursor.execute(f"SELECT count(id) FROM users WHERE id={message.chat.id}")
                 res = cursor.fetchall()[0][0]
                 if res == 0:
                     cursor.execute(
