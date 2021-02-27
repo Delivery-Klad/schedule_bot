@@ -92,6 +92,7 @@ def handler_start(message):
 
 @bot.message_handler(commands=['group'])
 def handler_group(message):
+    print(message.chat.type)
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     try:
         if message.chat.type != "group":
