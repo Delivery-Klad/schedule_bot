@@ -57,6 +57,7 @@ def handler_db(message):
 
 @bot.message_handler(commands=['start'])
 def handler_start(message):
+    print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     try:
         user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
         user_markup.row("сегодня", "завтра", "на неделю")
@@ -71,7 +72,7 @@ def handler_start(message):
             cursor.close()
             connect.close()
         text = f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n" \
-               f"/group - установить/изменить группу\n" \
+               f"/group (+группа если бот в беседе)- установить/изменить группу\n" \
                f"/today - расписание на сегодня\n" \
                f"/tomorrow - расписание на завтра\n" \
                f"/week - расписание на неделю"
@@ -79,7 +80,7 @@ def handler_start(message):
             bot.send_message(message.from_user.id, text, reply_markup=user_markup, parse_mode="HTML",
                              disable_web_page_preview=True)
         else:
-            bot.send_message(message.chat.id, text, reply_markup=user_markup, parse_mode="HTML",
+            bot.send_message(message.chat.id, text, parse_mode="HTML",
                              disable_web_page_preview=True)
     except Exception as er:
         if message.chat.type != "group":
@@ -91,6 +92,7 @@ def handler_start(message):
 
 @bot.message_handler(commands=['group'])
 def handler_group(message):
+    print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     try:
         if message.chat.type != "group":
             if message.from_user.id not in group_list:
