@@ -165,20 +165,8 @@ def get_teacher_ico(name):
 
 def get_time_ico(time):
     try:
-        if time[0] == "9":
-            return "🕘"
-        elif time[:2] == "10":
-            return "🕦"
-        elif time[:2] == "12":
-            return "🕐"
-        elif time[:2] == "14":
-            return "🕝"
-        elif time[:2] == "16":
-            return "🕟"
-        elif time[:2] == "18":
-            return "🕕"
-        elif time[:2] == "19":
-            return "🕢"
+        time_dict = {"9:": "🕘", "10": "🕦", "12": "🕐", "14": "🕝", "16": "🕟", "18": "🕕", "19": "🕢", "20": "🕘"}
+        return time_dict[time[:2]]
     except Exception as er:
         print(er)
         return "🕐"
@@ -298,9 +286,9 @@ def handler_text(message):
             except Exception as er:
                 print(er)
                 if message.chat.type != "group":
-                    bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье, шизоид</b>", parse_mode="HTML")
+                    bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
                 else:
-                    bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье, шизоид</b>", parse_mode="HTML")
+                    bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
         elif "week" in message.text or commands[2] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
             lessons = res.json()
