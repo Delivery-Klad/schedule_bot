@@ -65,9 +65,9 @@ def handler_start(message):
         cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
         res = cursor.fetchall()[0][0]
         if res == 0:
-            cursor.execute(f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
+            cursor.execute(f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
                            f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                           f"$taG$None$taG$)")
+                           f"$taG$None$taG$, {message.from_user.id})")
             connect.commit()
             cursor.close()
             connect.close()
@@ -107,9 +107,9 @@ def handler_group(message):
                 res = cursor.fetchall()[0][0]
                 if res == 0:
                     cursor.execute(
-                        f"INSERT INTO users VALUES({message.chat.id}, $taG${message.from_user.username}$taG$,"
+                        f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
                         f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                        f"$taG${group.upper()}$taG$)")
+                        f"$taG${group.upper()}$taG$, {message.chat.id})")
                 else:
                     cursor.execute(
                         f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE id={message.chat.id}")
@@ -184,9 +184,9 @@ def handler_text(message):
                 user_id = message.chat.id
             if res == 0:
                 cursor.execute(
-                    f"INSERT INTO users VALUES({user_id}, $taG${message.from_user.username}$taG$,"
+                    f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
                     f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                    f"$taG${message.text.upper()}$taG$)")
+                    f"$taG${message.text.upper()}$taG$, {user_id})")
             else:
                 cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
             connect.commit()
