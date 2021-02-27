@@ -2,14 +2,19 @@ import telebot
 import requests
 import psycopg2
 import os
-from googletrans import Translator
 
 
 bot = telebot.TeleBot(os.environ.get('TOKEN'))
 sm = "🤖"
 group_list = []
 commands = ["сегодня", "завтра", "на неделю"]
-translator = Translator(service_urls=["translate.google.com", "translate.google.net"])
+day_dict = {"monday": "понедельник",
+            "tuesday": "вторник",
+            "wednesday": "среда",
+            "thursday": "четверг",
+            "friday": "пятница",
+            "saturday": "суббота",
+            "sunday": "Воскресенье"}
 print(bot.get_me())
 
 
@@ -35,17 +40,6 @@ def create_tables():
     connect.commit()
     cursor.close()
     connect.close()
-
-
-def translate_text(text):
-    try:
-        res = translator.translate(text, dest='ru').text
-        first = res[0]
-        res = first.upper() + res[1:]
-        return res
-    except Exception as er:
-        print(er)
-        return text
 
 
 @bot.message_handler(commands=['db'])
@@ -309,7 +303,7 @@ def handler_text(message):
                     days.append(i)
                 days = sort_days(days)
                 for i in days:
-                    rez += f"<b>{translate_text(i)}\n</b>"
+                    rez += f"<b>{day_dict[i]}\n</b>"
                     for k in lessons[i]:
                         j, o = k['lesson'], k['time']
                         try:

@@ -3,9 +3,8 @@
 Requirements:
 <pre>
 1) PyTelegramBotAPI==3.7.6
-2) googletrans==4.0.0rc1
-3) psycopg2-binary==2.8.6
-4) requests
+2) psycopg2-binary==2.8.6
+3) requests
 </pre>
 
 Heroku variables:
