@@ -23,9 +23,6 @@ def db_connect():  # функция подключения к первой ба�
             password=os.environ.get('DB_pass')
         )
         cur = con.cursor()
-        cur.execute("delete from users where id=441287694")
-        cur.execute("delete from users where id=496537969")
-        con.commit()
         return con, cur
     except Exception as er:
         print(er)
