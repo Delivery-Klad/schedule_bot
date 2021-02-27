@@ -161,6 +161,7 @@ def get_time_ico(time):
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
+    print(message)
     if message.from_user.id in group_list:
         try:
             if "/" in message.text or message.text in commands:
