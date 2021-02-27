@@ -76,14 +76,14 @@ def handler_start(message):
                f"/today - расписание на сегодня\n" \
                f"/tomorrow - расписание на завтра\n" \
                f"/week - расписание на неделю"
-        if message.chat.type != "group":
+        if message.chat.type == "private":
             bot.send_message(message.from_user.id, text, reply_markup=user_markup, parse_mode="HTML",
                              disable_web_page_preview=True)
         else:
             bot.send_message(message.chat.id, text, parse_mode="HTML",
                              disable_web_page_preview=True)
     except Exception as er:
-        if message.chat.type != "group":
+        if message.chat.type == "private":
             bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
         else:
             bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
@@ -95,7 +95,7 @@ def handler_group(message):
     print(message.chat.type)
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     try:
-        if message.chat.type != "group":
+        if message.chat.type == "private":
             if message.from_user.id not in group_list:
                 group_list.append(message.from_user.id)
             bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
@@ -121,7 +121,7 @@ def handler_group(message):
             except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
-        if message.chat.type != "group":
+        if message.chat.type == "private":
             bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
         else:
             bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
@@ -178,7 +178,7 @@ def handler_text(message):
             connect, cursor = db_connect()
             cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
             res = cursor.fetchall()[0][0]
-            if message.chat.type != "group":
+            if message.chat.type == "private":
                 user_id = message.from_user.id
             else:
                 user_id = message.chat.id
@@ -201,7 +201,7 @@ def handler_text(message):
     if message.text[0] == "/" or message.text in commands:
         try:
             connect, cursor = db_connect()
-            if message.chat.type != "group":
+            if message.chat.type == "private":
                 cursor.execute(f"SELECT grp FROM users WHERE id={message.from_user.id}")
             else:
                 cursor.execute(f"SELECT grp FROM users WHERE id={message.chat.id}")
@@ -210,14 +210,14 @@ def handler_text(message):
                 cursor.close()
                 connect.close()
             except IndexError:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
                 else:
                     bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
                                                       f"группу")
                 return
             if group == "None":
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
                 else:
                     bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
@@ -225,7 +225,7 @@ def handler_text(message):
                 return
         except Exception as er:
             print(er)
-            if message.chat.type != "group":
+            if message.chat.type == "private":
                 bot.send_message(message.from_user.id,
                                  f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
             else:
@@ -246,12 +246,12 @@ def handler_text(message):
                 except TypeError:
                     pass
             if len(rez) > 50:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, rez, parse_mode="HTML")
                 else:
                     bot.send_message(message.chat.id, rez, parse_mode="HTML")
             else:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                 else:
                     bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
@@ -269,18 +269,18 @@ def handler_text(message):
                     except TypeError:
                         pass
                 if len(rez) > 50:
-                    if message.chat.type != "group":
+                    if message.chat.type == "private":
                         bot.send_message(message.from_user.id, rez, parse_mode="HTML")
                     else:
                         bot.send_message(message.chat.id, rez, parse_mode="HTML")
                 else:
-                    if message.chat.type != "group":
+                    if message.chat.type == "private":
                         bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                     else:
                         bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
             except Exception as er:
                 print(er)
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
                 else:
                     bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
@@ -304,18 +304,18 @@ def handler_text(message):
                             pass
                     rez += "------------------------\n"
             except Exception as er:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
                 else:
                     bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
                 print(er)
             if len(rez) > 50:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, rez, parse_mode="HTML")
                 else:
                     bot.send_message(message.chat.id, rez, parse_mode="HTML")
             else:
-                if message.chat.type != "group":
+                if message.chat.type == "private":
                     bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                 else:
                     bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
