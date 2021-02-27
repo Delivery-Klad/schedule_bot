@@ -97,12 +97,30 @@ def handler_start(message):
 @bot.message_handler(commands=['group'])
 def handler_group(message):
     try:
-        if message.from_user.id not in group_list:
-            group_list.append(message.from_user.id)
         if message.chat.type != "group":
+            if message.from_user.id not in group_list:
+                group_list.append(message.from_user.id)
             bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
         else:
-            bot.send_message(message.chat.id, f"{sm}Напишите вашу группу")
+            try:
+                group = message.text.split(" ", 1)[1]
+                connect, cursor = db_connect()
+                cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
+                res = cursor.fetchall()[0][0]
+                if res == 0:
+                    cursor.execute(
+                        f"INSERT INTO users VALUES({message.chat.id}, $taG${message.from_user.username}$taG$,"
+                        f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
+                        f"$taG${group.upper()}$taG$)")
+                else:
+                    cursor.execute(
+                        f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE id={message.chat.id}")
+                connect.commit()
+                cursor.close()
+                connect.close()
+                bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
+            except IndexError
+                bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
         if message.chat.type != "group":
             bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
@@ -178,10 +196,7 @@ def handler_text(message):
     if message.from_user.id in group_list:
         try:
             if "/" in message.text or message.text in commands:
-                if message.chat.type != "group":
-                    bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
-                else:
-                    bot.send_message(message.chat.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
+                bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
             connect, cursor = db_connect()
             cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
@@ -200,17 +215,11 @@ def handler_text(message):
             connect.commit()
             cursor.close()
             connect.close()
-            if message.chat.type != "group":
-                bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
-            else:
-                bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
+            bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
             group_list.pop(group_list.index(message.from_user.id))
             return
         except Exception as er:
-            if message.chat.type != "group":
-                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-            else:
-                bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
+            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
             print(er)
     if message.text[0] == "/" or message.text in commands:
         try:
@@ -232,7 +241,8 @@ def handler_text(message):
                 bot.send_message(message.from_user.id,
                                  f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
             else:
-                bot.send_message(message.chat.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
+                bot.send_message(message.chat.id, f"{sm}Не удается получить вашу группу\n/group (группа), чтобы "
+                                                  f"указать группу")
             return
         if "today" in message.text or commands[0] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
