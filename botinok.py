@@ -224,16 +224,27 @@ def handler_text(message):
     if message.text[0] == "/" or message.text in commands:
         try:
             connect, cursor = db_connect()
-            cursor.execute(f"SELECT grp FROM users WHERE id={message.from_user.id}")
+            if message.chat.type != "group":
+                cursor.execute(f"SELECT grp FROM users WHERE id={message.from_user.id}")
+            else:
+                cursor.execute(f"SELECT grp FROM users WHERE id={message.chat.id}")
             try:
                 group = cursor.fetchone()[0]
                 cursor.close()
                 connect.close()
             except IndexError:
-                bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
+                                                      f"группу")
                 return
             if group == "None":
-                bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
+                                                      f"группу")
                 return
         except Exception as er:
             print(er)
