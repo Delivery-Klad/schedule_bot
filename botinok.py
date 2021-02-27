@@ -15,6 +15,8 @@ day_dict = {"monday": "Понедельник",
             "friday": "Пятница",
             "saturday": "Суббота",
             "sunday": "Воскресенье"}
+lesson_dict = {"9:": "1", "10": "2", "12": "3", "14": "4", "16": "5", "18": "6", "19": "7", "20": "8"}
+time_dict = {"9:": "🕘", "10": "🕦", "12": "🕐", "14": "🕝", "16": "🕟", "18": "🕕", "19": "🕢", "20": "🕘"}
 print(bot.get_me())
 
 
@@ -42,6 +44,37 @@ def create_tables():
     connect.close()
 
 
+def insert_group(message, group):
+    try:
+        if message.chat.type != "group":
+            user_id = message.from_user.id
+            username = message.from_user.username
+            first_name = message.from_user.first_name
+            last_name = message.from_user.last_name
+        else:
+            user_id = message.chat.id
+            username = message.chat.title
+            first_name = "None"
+            last_name = "None"
+        connect, cursor = db_connect()
+        cursor.execute(f"SELECT count(id) FROM users WHERE id={user_id}")
+        res = cursor.fetchall()[0][0]
+        if res == 0:
+            cursor.execute(
+                f"INSERT INTO users VALUES({user_id}, $taG${username}$taG$,"
+                f"$taG${first_name}$taG$, $taG${last_name}$taG$, "
+                f"$taG${group.upper()}$taG$)")
+        else:
+            cursor.execute(f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE id={user_id}")
+        connect.commit()
+        cursor.close()
+        connect.close()
+        return True
+    except Exception as er:
+        print(er)
+        return False
+
+
 @bot.message_handler(commands=['db'])
 def handler_db(message):
     if message.from_user.id == 496537969:
@@ -59,21 +92,15 @@ def handler_start(message):
     try:
         user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
         user_markup.row("сегодня", "завтра", "на неделю")
-        connect, cursor = db_connect()
-        cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
-        res = cursor.fetchall()[0][0]
-        if res == 0:
-            cursor.execute(f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
-                           f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                           f"$taG$None$taG$)")
-            connect.commit()
-            cursor.close()
-            connect.close()
-        text = f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n" \
-               f"/group - установить/изменить группу\n" \
-               f"/today - расписание на сегодня\n" \
-               f"/tomorrow - расписание на завтра\n" \
-               f"/week - расписание на неделю"
+        if insert_group(message, "None"):
+            text = f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n" \
+                   f"/group - установить/изменить группу\n" \
+                   f"/today - расписание на сегодня\n" \
+                   f"/tomorrow - расписание на завтра\n" \
+                   f"/week - расписание на неделю"
+        else:
+            bot.send_message(message.chat.id, f"{sm}Что-то пошло не так")
+            return
         if message.chat.type != "group":
             bot.send_message(message.from_user.id, text, reply_markup=user_markup, parse_mode="HTML",
                              disable_web_page_preview=True)
@@ -98,21 +125,11 @@ def handler_group(message):
         else:
             try:
                 group = message.text.split(" ", 1)[1]
-                connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(id) FROM users WHERE id={message.chat.id}")
-                res = cursor.fetchall()[0][0]
-                if res == 0:
-                    cursor.execute(
-                        f"INSERT INTO users VALUES({message.chat.id}, $taG${message.from_user.username}$taG$,"
-                        f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                        f"$taG${group.upper()}$taG$)")
+                if insert_group(message, group):
+                    bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
                 else:
-                    cursor.execute(
-                        f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE id={message.chat.id}")
-                connect.commit()
-                cursor.close()
-                connect.close()
-                bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
+                    bot.send_message(message.chat.id, f"{sm}Что-то пошло не так")
+                    return
             except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
@@ -128,28 +145,18 @@ def sort_days(days):
     for i in days:
         temp.append(day.index(i))
     temp.sort()
-    days, tmp, index = [], [], 10
+    days, index = [], 10
     for i in temp:
         days.append(day[i])
     return days
 
 
-def number_of_lesson(time):
-    if time[0] == "9":
-        return "1 пара"
-    elif time[:2] == "10":
-        return "2 пара"
-    elif time[:2] == "12":
-        return "3 пара"
-    elif time[:2] == "14":
-        return "4 пара"
-    elif time[:2] == "16":
-        return "5 пара"
-    elif time[:2] == "18":
-        return "6 пара"
-    elif time[:2] == "19":
-        return "7 пара"
-    return time
+def number_of_lesson(lsn):
+    global lesson_dict
+    try:
+        return f"{lesson_dict[lsn[:2]]} пара"
+    except KeyError:
+        return "? пара"
 
 
 def get_teacher_ico(name):
@@ -164,11 +171,10 @@ def get_teacher_ico(name):
 
 
 def get_time_ico(time):
+    global time_dict
     try:
-        time_dict = {"9:": "🕘", "10": "🕦", "12": "🕐", "14": "🕝", "16": "🕟", "18": "🕕", "19": "🕢", "20": "🕘"}
         return time_dict[time[:2]]
-    except Exception as er:
-        print(er)
+    except KeyError:
         return "🕐"
 
 
@@ -180,24 +186,11 @@ def handler_text(message):
             if "/" in message.text or message.text in commands:
                 bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
-            connect, cursor = db_connect()
-            cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
-            res = cursor.fetchall()[0][0]
-            if message.chat.type != "group":
-                user_id = message.from_user.id
+            if insert_group(message, message.text):
+                bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
             else:
-                user_id = message.chat.id
-            if res == 0:
-                cursor.execute(
-                    f"INSERT INTO users VALUES({user_id}, $taG${message.from_user.username}$taG$,"
-                    f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                    f"$taG${message.text.upper()}$taG$)")
-            else:
-                cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
-            connect.commit()
-            cursor.close()
-            connect.close()
-            bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
+                bot.send_message(message.chat.id, f"{sm}Что-то пошло не так")
+                return
             group_list.pop(group_list.index(message.from_user.id))
             return
         except Exception as er:
@@ -269,8 +262,8 @@ def handler_text(message):
                     j, o = i['lesson'], i['time']
                     try:
                         rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                               f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
-                               f"{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                               f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']}" \
+                               f")\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
                     except TypeError:
                         pass
                 if len(rez) > 50:
