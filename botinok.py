@@ -36,8 +36,8 @@ def db_connect():  # функция подключения к первой ба�
 
 def create_tables():
     connect, cursor = db_connect()
-    cursor.execute("CREATE TABLE IF NOT EXISTS users(id INTEGER, username TEXT, first_name TEXT,"
-                   "last_name TEXT, grp TEXT)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS users(username TEXT, first_name TEXT,"
+                   "last_name TEXT, grp TEXT, ids BIGINT)")
     connect.commit()
     cursor.close()
     connect.close()
@@ -62,7 +62,7 @@ def handler_start(message):
         user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
         user_markup.row("сегодня", "завтра", "на неделю")
         connect, cursor = db_connect()
-        cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.from_user.id}")
+        cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.from_user.id}")
         res = cursor.fetchall()[0][0]
         if res == 0:
             cursor.execute(f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
@@ -103,7 +103,7 @@ def handler_group(message):
             try:
                 group = message.text.split(" ", 1)[1]
                 connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.chat.id}")
+                cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.chat.id}")
                 res = cursor.fetchall()[0][0]
                 if res == 0:
                     cursor.execute(
@@ -112,7 +112,7 @@ def handler_group(message):
                         f"$taG${group.upper()}$taG$, {message.chat.id})")
                 else:
                     cursor.execute(
-                        f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE id={message.chat.id}")
+                        f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE ids={message.chat.id}")
                 connect.commit()
                 cursor.close()
                 connect.close()
@@ -176,7 +176,7 @@ def handler_text(message):
                 bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
             connect, cursor = db_connect()
-            cursor.execute(f"SELECT count(ids) FROM users WHERE id={message.from_user.id}")
+            cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.from_user.id}")
             res = cursor.fetchall()[0][0]
             if message.chat.type == "private":
                 user_id = message.from_user.id
@@ -188,7 +188,7 @@ def handler_text(message):
                     f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
                     f"$taG${message.text.upper()}$taG$, {user_id})")
             else:
-                cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE id={message.from_user.id}")
+                cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE ids={message.from_user.id}")
             connect.commit()
             cursor.close()
             connect.close()
@@ -202,9 +202,9 @@ def handler_text(message):
         try:
             connect, cursor = db_connect()
             if message.chat.type == "private":
-                cursor.execute(f"SELECT grp FROM users WHERE id={message.from_user.id}")
+                cursor.execute(f"SELECT grp FROM users WHERE ids={message.from_user.id}")
             else:
-                cursor.execute(f"SELECT grp FROM users WHERE id={message.chat.id}")
+                cursor.execute(f"SELECT grp FROM users WHERE ids={message.chat.id}")
             try:
                 group = cursor.fetchone()[0]
                 cursor.close()
