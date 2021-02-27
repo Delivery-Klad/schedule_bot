@@ -119,7 +119,7 @@ def handler_group(message):
                 cursor.close()
                 connect.close()
                 bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
-            except IndexError
+            except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
         if message.chat.type != "group":
