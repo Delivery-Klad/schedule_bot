@@ -8,12 +8,12 @@ bot = telebot.TeleBot(os.environ.get('TOKEN'))
 sm = "🤖"
 group_list = []
 commands = ["сегодня", "завтра", "на неделю"]
-day_dict = {"monday": "понедельник",
-            "tuesday": "вторник",
-            "wednesday": "среда",
-            "thursday": "четверг",
-            "friday": "пятница",
-            "saturday": "суббота",
+day_dict = {"monday": "Понедельник",
+            "tuesday": "Вторник",
+            "wednesday": "Среда",
+            "thursday": "Четверг",
+            "friday": "Пятница",
+            "saturday": "Суббота",
             "sunday": "Воскресенье"}
 print(bot.get_me())
 
@@ -273,27 +273,34 @@ def handler_text(message):
                 else:
                     bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
         elif "tomorrow" in message.text or commands[1] in message.text.lower():
-            res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
-            lessons = res.json()
-            rez = "<b>Пары завтра:\n</b>"
-            for i in lessons:
-                j, o = i['lesson'], i['time']
-                try:
-                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                           f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
-                           f"{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                except TypeError:
-                    pass
-            if len(rez) > 50:
-                if message.chat.type != "group":
-                    bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+            try:
+                res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
+                lessons = res.json()
+                rez = "<b>Пары завтра:\n</b>"
+                for i in lessons:
+                    j, o = i['lesson'], i['time']
+                    try:
+                        rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                               f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
+                               f"{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                    except TypeError:
+                        pass
+                if len(rez) > 50:
+                    if message.chat.type != "group":
+                        bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                    else:
+                        bot.send_message(message.chat.id, rez, parse_mode="HTML")
                 else:
-                    bot.send_message(message.chat.id, rez, parse_mode="HTML")
-            else:
+                    if message.chat.type != "group":
+                        bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                    else:
+                        bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+            except Exception as er:
+                print(er)
                 if message.chat.type != "group":
-                    bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                    bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье, шизоид</b>", parse_mode="HTML")
                 else:
-                    bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                    bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье, шизоид</b>", parse_mode="HTML")
         elif "week" in message.text or commands[2] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
             lessons = res.json()
