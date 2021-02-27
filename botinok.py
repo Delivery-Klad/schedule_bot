@@ -115,6 +115,7 @@ def handler_group(message):
                 connect.commit()
                 cursor.close()
                 connect.close()
+                print(f"{message.chat.id} {message.from_user.id}")
                 bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
             except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
