@@ -75,14 +75,22 @@ def handler_start(message):
             connect.commit()
             cursor.close()
             connect.close()
-        bot.send_message(message.from_user.id, f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n"
-                                               "/group - установить/изменить группу\n"
-                                               "/today - расписание на сегодня\n"
-                                               "/tomorrow - расписание на завтра\n"
-                                               "/week - расписание на неделю",
-                         reply_markup=user_markup, parse_mode="HTML", disable_web_page_preview=True)
+        text = f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n" \
+               f"/group - установить/изменить группу\n" \
+               f"/today - расписание на сегодня\n" \
+               f"/tomorrow - расписание на завтра\n" \
+               f"/week - расписание на неделю"
+        if message.chat.type != "group":
+            bot.send_message(message.from_user.id, text, reply_markup=user_markup, parse_mode="HTML",
+                             disable_web_page_preview=True)
+        else:
+            bot.send_message(message.chat.id, text, reply_markup=user_markup, parse_mode="HTML",
+                             disable_web_page_preview=True)
     except Exception as er:
-        bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+        if message.chat.type != "group":
+            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+        else:
+            bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
         print(er)
 
 
@@ -91,9 +99,15 @@ def handler_group(message):
     try:
         if message.from_user.id not in group_list:
             group_list.append(message.from_user.id)
-        bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
+        if message.chat.type != "group":
+            bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
+        else:
+            bot.send_message(message.chat.id, f"{sm}Напишите вашу группу")
     except Exception as er:
-        bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+        if message.chat.type != "group":
+            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+        else:
+            bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
         print(er)
 
 
@@ -161,20 +175,24 @@ def get_time_ico(time):
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
-    print(message)
-    if message.chat.group is not None:
-        bot.send_message(message.chat.id, "Пока не реализовано")
     if message.from_user.id in group_list:
         try:
             if "/" in message.text or message.text in commands:
-                bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
             connect, cursor = db_connect()
             cursor.execute(f"SELECT count(id) FROM users WHERE id={message.from_user.id}")
             res = cursor.fetchall()[0][0]
+            if message.chat.type != "group":
+                user_id = message.from_user.id
+            else:
+                user_id = message.chat.id
             if res == 0:
                 cursor.execute(
-                    f"INSERT INTO users VALUES({message.from_user.id}, $taG${message.from_user.username}$taG$,"
+                    f"INSERT INTO users VALUES({user_id}, $taG${message.from_user.username}$taG$,"
                     f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
                     f"$taG${message.text.upper()}$taG$)")
             else:
@@ -182,11 +200,17 @@ def handler_text(message):
             connect.commit()
             cursor.close()
             connect.close()
-            bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
+            if message.chat.type != "group":
+                bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
+            else:
+                bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
             group_list.pop(group_list.index(message.from_user.id))
             return
         except Exception as er:
-            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+            if message.chat.type != "group":
+                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+            else:
+                bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
             print(er)
     if message.text[0] == "/" or message.text in commands:
         try:
@@ -204,7 +228,11 @@ def handler_text(message):
                 return
         except Exception as er:
             print(er)
-            bot.send_message(message.from_user.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
+            if message.chat.type != "group":
+                bot.send_message(message.from_user.id,
+                                 f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
+            else:
+                bot.send_message(message.chat.id, f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
             return
         if "today" in message.text or commands[0] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
@@ -220,9 +248,15 @@ def handler_text(message):
                 except TypeError:
                     pass
             if len(rez) > 50:
-                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, rez, parse_mode="HTML")
             else:
-                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
         elif "tomorrow" in message.text or commands[1] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
             lessons = res.json()
@@ -236,9 +270,15 @@ def handler_text(message):
                 except TypeError:
                     pass
             if len(rez) > 50:
-                bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, rez, parse_mode="HTML")
             else:
-                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
         elif "week" in message.text or commands[2] in message.text.lower():
             res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
             lessons = res.json()
@@ -259,12 +299,21 @@ def handler_text(message):
                             pass
                     rez += "------------------------\n"
             except Exception as er:
-                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
                 print(er)
             if len(rez) > 50:
-                bot.send_message(message.from_user.id, f"{rez}", parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, rez, parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, rez, parse_mode="HTML")
             else:
-                bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                if message.chat.type != "group":
+                    bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                else:
+                    bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
     else:
         bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
 
