@@ -162,6 +162,8 @@ def get_time_ico(time):
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     print(message)
+    if message.chat.group is not None:
+        bot.send_message(message.chat.id, "Пока не реализовано")
     if message.from_user.id in group_list:
         try:
             if "/" in message.text or message.text in commands:
