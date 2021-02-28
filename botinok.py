@@ -6,7 +6,7 @@ import linecache
 import sys
 
 
-bot = telebot.TeleBot(os.environ.get('TOKEN'))
+bot = telebot.TeleBot("1695146161:AAGER7a84_JjsVtKm3VnwBZZcNFYFCpcUr0")
 sm = "🤖"
 group_list = []
 commands = ["сегодня", "завтра", "на неделю"]
@@ -26,10 +26,10 @@ def db_connect():  # функция подключения к первой ба�
     try:
         con = psycopg2.connect(
             host="ec2-52-70-67-123.compute-1.amazonaws.com",
-            database=os.environ.get('DB'),
-            user=os.environ.get('DB_user'),
+            database="d68nmk23reqak4",
+            user="egnnjetsqjwwji",
             port="5432",
-            password=os.environ.get('DB_pass')
+            password="dcf3bd216bd19303409eb66b094b902d35610feb0fab452eb46365592829061b"
         )
         cur = con.cursor()
         return con, cur
@@ -168,9 +168,9 @@ def number_of_lesson(lsn):
 
 
 def get_teacher_ico(name):
-    symbol = name.split(' ', 1)[0][len(name) - 1]
     try:
-        if symbol == "а":
+        symbol = name.split(' ', 1)[0]
+        if symbol[len(name) - 1] == "а":
             return "👩‍🏫"
         else:
             return "👨‍🏫"
@@ -270,8 +270,8 @@ def handler_text(message):
                             rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
                                    f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
                                    f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                        except TypeError:
-                            pass
+                        except Exception as er:
+                            error_log(er)
                     if len(rez) > 50:
                         if message.chat.type == "private":
                             bot.send_message(message.from_user.id, rez, parse_mode="HTML")
@@ -300,8 +300,8 @@ def handler_text(message):
                             rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
                                    f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
                                    f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                        except TypeError:
-                            pass
+                        except Exception as er:
+                            error_log(er)
                     if len(rez) > 50:
                         if message.chat.type == "private":
                             bot.send_message(message.from_user.id, rez, parse_mode="HTML")
@@ -335,8 +335,8 @@ def handler_text(message):
                                 rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
                                        f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
                                        f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                            except TypeError:
-                                pass
+                            except Exception as er:
+                                error_log(er)
                         rez += "------------------------\n"
                 except Exception as er:
                     error_log(er)
