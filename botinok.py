@@ -168,9 +168,9 @@ def number_of_lesson(lsn):
 
 
 def get_teacher_ico(name):
-    name = name.split(' ', 1)[0]
+    symbol = name.split(' ', 1)[0][len(name) - 1]
     try:
-        if name[len(name) - 1] == "а":
+        if symbol == "а":
             return "👩‍🏫"
         else:
             return "👨‍🏫"
@@ -209,7 +209,8 @@ def handler_text(message):
                         f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
                         f"$taG${message.text.upper()}$taG$, {user_id})")
                 else:
-                    cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE ids={message.from_user.id}")
+                    cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE "
+                                   f"ids={message.from_user.id}")
                 connect.commit()
                 cursor.close()
                 connect.close()
@@ -232,18 +233,19 @@ def handler_text(message):
                     connect.close()
                 except IndexError:
                     if message.chat.type == "private":
-                        bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать группу")
+                        bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n"
+                                                               f"/group, чтобы указать группу")
                     else:
-                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
-                                                          f"группу")
+                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать"
+                                                          f" группу")
                     return
                 if group == "None":
                     if message.chat.type == "private":
                         bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать "
                                                                f"группу")
                     else:
-                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать "
-                                                          f"группу")
+                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать"
+                                                          f" группу")
                     return
             except Exception as er:
                 error_log(er)
@@ -284,9 +286,9 @@ def handler_text(message):
                     error_log(er)
                     if "line 1 column 1" in str(er):
                         if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
+                            bot.send_message(message.from_user.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
                         else:
-                            bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
+                            bot.send_message(message.chat.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
             elif "tomorrow" in message.text or commands[1] in message.text.lower():
                 try:
                     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
@@ -296,8 +298,8 @@ def handler_text(message):
                         j, o = i['lesson'], i['time']
                         try:
                             rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} ({j['type']})\n" \
-                                   f"{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
+                                   f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
                         except TypeError:
                             pass
                     if len(rez) > 50:
