@@ -47,6 +47,8 @@ def create_tables():
 
 
 def error_log(er):
+    if "string indices must be integers" in str(er):
+        return
     print(er)
     exc_type, exc_obj, tb = sys.exc_info()
     f = tb.tb_frame
@@ -170,7 +172,7 @@ def number_of_lesson(lsn):
 def get_teacher_ico(name):
     try:
         symbol = name.split(' ', 1)[0]
-        if symbol[len(name) - 1] == "а":
+        if symbol[len(symbol) - 1] == "а":
             return "👩‍🏫"
         else:
             return "👨‍🏫"
