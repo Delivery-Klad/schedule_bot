@@ -280,8 +280,13 @@ def handler_text(message):
                             bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                         else:
                             bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-                except Exception as err:
-                    error_log(err)
+                except Exception as er:
+                    error_log(er)
+                    if "line 1 column 1" in str(er):
+                        if message.chat.type == "private":
+                            bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
+                        else:
+                            bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
             elif "tomorrow" in message.text or commands[1] in message.text.lower():
                 try:
                     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
