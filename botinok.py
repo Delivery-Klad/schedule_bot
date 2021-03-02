@@ -108,7 +108,12 @@ def handler_group(message):
     try:
         if message.chat.type == "private":
             if message.from_user.id not in group_list:
-                group_list.append(message.from_user.id)
+                try:
+                    group = message.text.split(" ", 1)[1]
+                    set_group(message, message.from_user.id, group.upper())
+                    return
+                except IndexError:
+                    group_list.append(message.from_user.id)
             bot.send_message(message.from_user.id, f"{sm}Напишите вашу группу")
         else:
             try:
@@ -179,8 +184,10 @@ def set_group(message, user_id, group):
         try:
             group_list.pop(group_list.index(user_id))
         except Exception as er:
-            error_log(er)
-        return
+            if "is not in list" in str(er):
+                pass
+            else:
+                error_log(er)
     except Exception as er:
         error_log(er)
         bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
@@ -247,7 +254,7 @@ def handler_text(message):
                         bot.send_message(user_id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
             elif "tomorrow" in message.text.lower() or commands[1] in message.text.lower():
                 try:
-                    schedule = get_schedule("tomorrow", group, "<b>Пары сегодня:\n</b>")
+                    schedule = get_schedule("tomorrow", group, "<b>Пары завтра:\n</b>")
                     if len(schedule) > 50:
                         bot.send_message(user_id, schedule, parse_mode="HTML")
                     else:
