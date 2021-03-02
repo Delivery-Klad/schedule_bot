@@ -6,7 +6,7 @@ import linecache
 import sys
 
 
-bot = telebot.TeleBot(os.environ.get('TOKEN'))
+bot = telebot.TeleBot(str(os.environ.get('TOKEN')))
 sm = "🤖"
 group_list = []
 commands = ["сегодня", "завтра", "на неделю"]
@@ -26,10 +26,10 @@ def db_connect():  # функция подключения к первой ба�
     try:
         con = psycopg2.connect(
             host="ec2-3-232-163-23.compute-1.amazonaws.com",
-            database="os.environ.get('DB')",
-            user="os.environ.get('DB_user')",
+            database=str(os.environ.get('DB')),
+            user=str(os.environ.get('DB_user')),
             port="5432",
-            password="os.environ.get('DB_pass')"
+            password=str(os.environ.get('DB_pass'))
         )
         cur = con.cursor()
         return con, cur
