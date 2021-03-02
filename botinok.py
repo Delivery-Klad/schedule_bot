@@ -47,17 +47,20 @@ def create_tables():
 
 
 def error_log(er):
-    if "string indices must be integers" in str(er):
-        return
-    print(er)
-    exc_type, exc_obj, tb = sys.exc_info()
-    f = tb.tb_frame
-    lineno = tb.tb_lineno
-    filename = f.f_code.co_filename
-    linecache.checkcache(filename)
-    line = linecache.getline(filename, lineno, f.f_globals)
-    reason = f"EXCEPTION IN ({filename}, LINE {lineno} '{line.strip()}'): {exc_obj}"
-    print(reason)
+    try:
+        if "string indices must be integers" in str(er):
+            return
+        print(er)
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        linenos = tb.tb_lineno
+        filename = f.f_code.co_filename
+        linecache.checkcache(filename)
+        line = linecache.getline(filename, linenos, f.f_globals)
+        reason = f"EXCEPTION IN ({filename}, LINE {linenos} '{line.strip()}'): {exc_obj}"
+        print(reason)
+    except Exception as er:
+        print(f"{er} ошибка в обработчике ошибок. ЧТО?")
 
 
 @bot.message_handler(commands=['db'])
@@ -74,20 +77,11 @@ def handler_db(message):
 
 @bot.message_handler(commands=['start'])
 def handler_start(message):
-    print(f"{message.from_user.id} {message.from_user.username} {message.text}")
+    user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
+    print(f"{user_id} {message.from_user.username} {message.text}")
     try:
         user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
         user_markup.row("сегодня", "завтра", "на неделю")
-        connect, cursor = db_connect()
-        cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.from_user.id}")
-        res = cursor.fetchall()[0][0]
-        if res == 0:
-            cursor.execute(f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
-                           f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                           f"$taG$None$taG$, {message.from_user.id})")
-            connect.commit()
-            cursor.close()
-            connect.close()
         text = f"<b>{sm}Камнями кидаться <a href='t.me/delivery_klad'>СЮДА</a></b>\n" \
                f"/group (+группа если бот в беседе)- установить/изменить группу\n" \
                f"/today - расписание на сегодня\n" \
@@ -102,17 +96,15 @@ def handler_start(message):
     except Exception as er:
         error_log(er)
         try:
-            if message.chat.type == "private":
-                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-            else:
-                bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
+            bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
         except Exception as err:
             error_log(err)
 
 
 @bot.message_handler(commands=['group'])
 def handler_group(message):
-    print(f"{message.from_user.id} {message.from_user.username} {message.text}")
+    user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
+    print(f"{user_id} {message.from_user.username} {message.text}")
     try:
         if message.chat.type == "private":
             if message.from_user.id not in group_list:
@@ -121,31 +113,14 @@ def handler_group(message):
         else:
             try:
                 group = message.text.split(" ", 1)[1]
-                connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.chat.id}")
-                res = cursor.fetchall()[0][0]
-                if res == 0:
-                    cursor.execute(
-                        f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
-                        f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                        f"$taG${group.upper()}$taG$, {message.chat.id})")
-                else:
-                    cursor.execute(
-                        f"UPDATE users SET grp=$taG${group.upper()}$taG$ WHERE ids={message.chat.id}")
-                connect.commit()
-                cursor.close()
-                connect.close()
-                print(f"{message.chat.id} {message.from_user.id}")
+                set_group(message, message.chat.id, group.upper())
                 bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
             except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
         error_log(er)
         try:
-            if message.chat.type == "private":
-                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-            else:
-                bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
+            bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
         except Exception as err:
             error_log(err)
 
@@ -172,10 +147,7 @@ def number_of_lesson(lsn):
 def get_teacher_ico(name):
     try:
         symbol = name.split(' ', 1)[0]
-        if symbol[len(symbol) - 1] == "а":
-            return "👩‍🏫"
-        else:
-            return "👨‍🏫"
+        return "👩‍🏫" if symbol[len(symbol) - 1] == "а" else "👨‍🏫"
     except IndexError:
         return ""
 
@@ -189,138 +161,99 @@ def get_time_ico(time):
         return "🕐"
 
 
+def set_group(message, user_id, group):
+    try:
+        connect, cursor = db_connect()
+        cursor.execute(f"SELECT count(ids) FROM users WHERE ids={user_id}")
+        res = cursor.fetchall()[0][0]
+        if res == 0:
+            cursor.execute(
+                f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
+                f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
+                f"$taG${group}$taG$, {user_id})")
+        else:
+            cursor.execute(f"UPDATE users SET grp=$taG${group}$taG$ WHERE ids={user_id}")
+        connect.commit()
+        cursor.close()
+        connect.close()
+        bot.send_message(user_id, f"{sm}Я вас запомнил")
+        group_list.pop(group_list.index(user_id))
+        return
+    except Exception as er:
+        error_log(er)
+        bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
+
+
+def get_schedule(day, group, title):
+    res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{day}")
+    lessons = res.json()
+    schedule = title
+    for i in lessons:
+        j, o = i['lesson'], i['time']
+        try:
+            schedule += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
+                   f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+        except Exception as er:
+            error_log(er)
+    return schedule
+
+
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
     try:
         if message.from_user.id in group_list:
-            try:
-                if "/" in message.text or message.text in commands:
-                    bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
-                    return
-                connect, cursor = db_connect()
-                cursor.execute(f"SELECT count(ids) FROM users WHERE ids={message.from_user.id}")
-                res = cursor.fetchall()[0][0]
-                if message.chat.type == "private":
-                    user_id = message.from_user.id
-                else:
-                    user_id = message.chat.id
-                if res == 0:
-                    cursor.execute(
-                        f"INSERT INTO users VALUES($taG${message.from_user.username}$taG$,"
-                        f"$taG${message.from_user.first_name}$taG$, $taG${message.from_user.last_name}$taG$, "
-                        f"$taG${message.text.upper()}$taG$, {user_id})")
-                else:
-                    cursor.execute(f"UPDATE users SET grp=$taG${message.text.upper()}$taG$ WHERE "
-                                   f"ids={message.from_user.id}")
-                connect.commit()
-                cursor.close()
-                connect.close()
-                bot.send_message(message.from_user.id, f"{sm}Я вас запомнил")
-                group_list.pop(group_list.index(message.from_user.id))
+            if "/" in message.text or message.text in commands:
+                bot.send_message(message.from_user.id, f"{sm}НАПИШИТЕ ВАШУ ГРУППУ")
                 return
-            except Exception as er:
-                error_log(er)
-                bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-        if message.text[0] == "/" or message.text.lower() in commands:
+            set_group(message, message.from_user.id, message.text.upper())
+        elif message.text[0] == "/" or message.text.lower() in commands:
+            user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
+            text = "/group" if message.chat.type == "private" else "/group (группа)"
             try:
                 connect, cursor = db_connect()
-                if message.chat.type == "private":
-                    cursor.execute(f"SELECT grp FROM users WHERE ids={message.from_user.id}")
-                else:
-                    cursor.execute(f"SELECT grp FROM users WHERE ids={message.chat.id}")
+                cursor.execute(f"SELECT grp FROM users WHERE ids={user_id}")
                 try:
                     group = cursor.fetchone()[0]
                     cursor.close()
                     connect.close()
-                except IndexError:
-                    if message.chat.type == "private":
-                        bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n"
-                                                               f"/group, чтобы указать группу")
-                    else:
-                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать"
-                                                          f" группу")
+                except Exception as er:
+                    error_log(er)
+                    bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
                 if group == "None":
-                    if message.chat.type == "private":
-                        bot.send_message(message.from_user.id, f"{sm}У вас не указана группа\n/group, чтобы указать "
-                                                               f"группу")
-                    else:
-                        bot.send_message(message.chat.id, f"{sm}У вас не указана группа\n/group (группа), чтобы указать"
-                                                          f" группу")
+                    bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
             except Exception as er:
                 error_log(er)
                 try:
-                    if message.chat.type == "private":
-                        bot.send_message(message.from_user.id,
-                                         f"{sm}Не удается получить вашу группу\n/group, чтобы указать группу")
-                    else:
-                        bot.send_message(message.chat.id, f"{sm}Не удается получить вашу группу\n/group (группа), "
-                                                          f"чтобы указать группу")
+                    bot.send_message(user_id, f"{sm}Не удается получить вашу группу\n{text}, чтобы указать группу")
                 except Exception as err:
                     error_log(err)
                 return
             if "today" in message.text.lower() or commands[0] in message.text.lower():
                 try:
-                    res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
-                    lessons = res.json()
-                    rez = "<b>Пары сегодня:\n</b>"
-                    for i in lessons:
-                        j, o = i['lesson'], i['time']
-                        try:
-                            rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
-                                   f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                        except Exception as er:
-                            error_log(er)
-                    if len(rez) > 50:
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, rez, parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, rez, parse_mode="HTML")
+                    schedule = get_schedule("today", group, "<b>Пары сегодня:\n</b>")
+                    if len(schedule) > 50:
+                        bot.send_message(user_id, schedule, parse_mode="HTML")
                     else:
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                        bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                 except Exception as er:
                     error_log(er)
                     if "line 1 column 1" in str(er):
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
+                        bot.send_message(user_id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
             elif "tomorrow" in message.text.lower() or commands[1] in message.text.lower():
                 try:
-                    res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
-                    lessons = res.json()
-                    rez = "<b>Пары завтра:\n</b>"
-                    for i in lessons:
-                        j, o = i['lesson'], i['time']
-                        try:
-                            rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                                   f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
-                                   f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                        except Exception as er:
-                            error_log(er)
-                    if len(rez) > 50:
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, rez, parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, rez, parse_mode="HTML")
+                    schedule = get_schedule("tomorrow", group, "<b>Пары сегодня:\n</b>")
+                    if len(schedule) > 50:
+                        bot.send_message(user_id, schedule, parse_mode="HTML")
                     else:
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                        bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
                 except Exception as er:
                     error_log(er)
                     if "line 1 column 1" in str(er):
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
-                        else:
-                            bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
+                        bot.send_message(user_id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
             elif "week" in message.text.lower() or commands[2] in message.text.lower():
                 res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
                 lessons = res.json()
@@ -343,22 +276,13 @@ def handler_text(message):
                 except Exception as er:
                     error_log(er)
                     try:
-                        if message.chat.type == "private":
-                            bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-                        else:
-                            bot.send_message(message.chat.id, f"{sm}А ой, ошиб04ка")
+                        bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
                     except Exception as err:
                         error_log(err)
                 if len(rez) > 50:
-                    if message.chat.type == "private":
-                        bot.send_message(message.from_user.id, rez, parse_mode="HTML")
-                    else:
-                        bot.send_message(message.chat.id, rez, parse_mode="HTML")
+                    bot.send_message(user_id, rez, parse_mode="HTML")
                 else:
-                    if message.chat.type == "private":
-                        bot.send_message(message.from_user.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-                    else:
-                        bot.send_message(message.chat.id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                    bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
         else:
             bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
     except Exception as er:
@@ -368,7 +292,7 @@ def handler_text(message):
 try:
     while True:
         try:
-            bot.polling(none_stop=True, interval=0)  # обращение к api
+            bot.polling(none_stop=True, interval=0)
         except Exception as e:
             print(e)
 except Exception as e:
