@@ -16,4 +16,4 @@ Heroku variables:
 | DB_user       | Database user.          |
 | DB_pass       | Database user password. |
 
-<div style="text-align:center"><img src="images/500.jpg" /></div>
+<img  height=350px style="border-radius: 10px;" src="images/500.jpg"></a>
