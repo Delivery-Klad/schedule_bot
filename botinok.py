@@ -261,7 +261,7 @@ def handler_text(message):
                 except Exception as err:
                     error_log(err)
                 return
-            if "today" in message.text or commands[0] in message.text.lower():
+            if "today" in message.text.lower() or commands[0] in message.text.lower():
                 try:
                     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/today")
                     lessons = res.json()
@@ -291,7 +291,7 @@ def handler_text(message):
                             bot.send_message(message.from_user.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
                         else:
                             bot.send_message(message.chat.id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
-            elif "tomorrow" in message.text or commands[1] in message.text.lower():
+            elif "tomorrow" in message.text.lower() or commands[1] in message.text.lower():
                 try:
                     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/tomorrow")
                     lessons = res.json()
@@ -321,7 +321,7 @@ def handler_text(message):
                             bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
                         else:
                             bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
-            elif "week" in message.text or commands[2] in message.text.lower():
+            elif "week" in message.text .lower()or commands[2] in message.text.lower():
                 res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
                 lessons = res.json()
                 rez, days = "", []
