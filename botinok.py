@@ -293,7 +293,7 @@ def handler_text(message):
                 else:
                     bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
         else:
-            if message.chat.type == "private"
+            if message.chat.type == "private":
                 bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
     except Exception as er:
         error_log(er)
