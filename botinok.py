@@ -222,7 +222,7 @@ def handler_text(message):
             except Exception as er:
                 error_log(er)
                 bot.send_message(message.from_user.id, f"{sm}А ой, ошиб04ка")
-        if message.text[0] == "/" or message.text in commands:
+        if message.text[0] == "/" or message.text.lower() in commands:
             try:
                 connect, cursor = db_connect()
                 if message.chat.type == "private":
@@ -321,7 +321,7 @@ def handler_text(message):
                             bot.send_message(message.from_user.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
                         else:
                             bot.send_message(message.chat.id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
-            elif "week" in message.text .lower()or commands[2] in message.text.lower():
+            elif "week" in message.text.lower() or commands[2] in message.text.lower():
                 res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
                 lessons = res.json()
                 rez, days = "", []
