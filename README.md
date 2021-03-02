@@ -3,7 +3,7 @@
 Requirements:
 | Libraries        | Version |
 |------------------|---------|
-| PyYelegramBotAPI | 3.7.6   |
+| PyTelegramBotAPI | 3.7.6   |
 | psycopg2-binary  | 2.8.6   |
 | requests         | 2.25.1  |
 
