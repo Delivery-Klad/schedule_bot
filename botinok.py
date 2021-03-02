@@ -114,7 +114,6 @@ def handler_group(message):
             try:
                 group = message.text.split(" ", 1)[1]
                 set_group(message, message.chat.id, group.upper())
-                bot.send_message(message.chat.id, f"{sm}Я вас запомнил")
             except IndexError:
                 bot.send_message(message.chat.id, f"{sm}/group (группа)")
     except Exception as er:
@@ -177,7 +176,10 @@ def set_group(message, user_id, group):
         cursor.close()
         connect.close()
         bot.send_message(user_id, f"{sm}Я вас запомнил")
-        group_list.pop(group_list.index(user_id))
+        try:
+            group_list.pop(group_list.index(user_id))
+        except Exception as er:
+            error_log(er)
         return
     except Exception as er:
         error_log(er)
