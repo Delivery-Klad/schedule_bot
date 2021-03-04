@@ -231,7 +231,7 @@ def handler_text(message):
                     error_log(er)
                     bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
-                if group == "None":
+                if group.lower() == "none":
                     bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
             except Exception as er:
@@ -265,6 +265,35 @@ def handler_text(message):
                         bot.send_message(user_id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
             elif "week" in message.text.lower() or commands[2] in message.text.lower():
                 res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
+                lessons = res.json()
+                rez, days = "", []
+                try:
+                    for i in lessons:
+                        days.append(i)
+                    days = sort_days(days)
+                    for i in days:
+                        rez += f"<b>{day_dict[i]}\n</b>"
+                        for k in lessons[i]:
+                            j, o = k['lesson'], k['time']
+                            try:
+                                rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                                       f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
+                                       f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                            except Exception as er:
+                                error_log(er)
+                        rez += "------------------------\n"
+                except Exception as er:
+                    error_log(er)
+                    try:
+                        bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
+                    except Exception as err:
+                        error_log(err)
+                if len(rez) > 50:
+                    bot.send_message(user_id, rez, parse_mode="HTML")
+                else:
+                    bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+            elif "next_week" in message.text.lower() or commands[3] in message.text.lower():
+                res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/next_week")
                 lessons = res.json()
                 rez, days = "", []
                 try:
