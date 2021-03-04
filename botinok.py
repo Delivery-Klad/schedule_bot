@@ -4,6 +4,7 @@ import psycopg2
 import os
 import linecache
 import sys
+import datetime
 
 
 bot = telebot.TeleBot(str(os.environ.get('TOKEN')))
@@ -208,6 +209,37 @@ def get_schedule(day, group, title):
     return schedule
 
 
+def get_week_schedule(user_id, week, group):
+    res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{week}")
+    lessons = res.json()
+    rez, days = "", []
+    try:
+        for i in lessons:
+            days.append(i)
+        days = sort_days(days)
+        for i in days:
+            rez += f"<b>{day_dict[i]}\n</b>"
+            for k in lessons[i]:
+                j, o = k['lesson'], k['time']
+                try:
+                    rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
+                           f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
+                           f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                except Exception as er:
+                    error_log(er)
+            rez += "------------------------\n"
+    except Exception as er:
+        error_log(er)
+        try:
+            bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
+        except Exception as err:
+            error_log(err)
+    if len(rez) > 50:
+        bot.send_message(user_id, rez, parse_mode="HTML")
+    else:
+        bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+
+
 @bot.message_handler(content_types=['text'])
 def handler_text(message):
     print(f"{message.from_user.id} {message.from_user.username} {message.text}")
@@ -218,6 +250,7 @@ def handler_text(message):
                 return
             set_group(message, message.from_user.id, message.text.upper())
         elif message.text[0] == "/" or message.text.lower() in commands:
+            day = datetime.datetime.today().weekday()
             user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
             text = "/group" if message.chat.type == "private" else "/group (группа)"
             try:
@@ -251,7 +284,8 @@ def handler_text(message):
                 except Exception as er:
                     error_log(er)
                     if "line 1 column 1" in str(er):
-                        bot.send_message(user_id, f"{sm}<b>Сегодня воскресенье</b>", parse_mode="HTML")
+                        text = "Сегодня воскресенье" if day == 6 else "Не удается связаться с API"
+                        bot.send_message(user_id, f"{sm}<b>{text}</b>", parse_mode="HTML")
             elif "tomorrow" in message.text.lower() or commands[1] in message.text.lower():
                 try:
                     schedule = get_schedule("tomorrow", group, "<b>Пары завтра:\n</b>")
@@ -262,65 +296,12 @@ def handler_text(message):
                 except Exception as er:
                     error_log(er)
                     if "line 1 column 1" in str(er):
-                        bot.send_message(user_id, f"{sm}<b>Завтра воскресенье</b>", parse_mode="HTML")
+                        text = "Сегодня воскресенье" if day == 5 else "Не удается связаться с API"
+                        bot.send_message(user_id, f"{sm}<b>{text}</b>", parse_mode="HTML")
             elif "week" in message.text.lower() or commands[2] in message.text.lower():
-                res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/week")
-                lessons = res.json()
-                rez, days = "", []
-                try:
-                    for i in lessons:
-                        days.append(i)
-                    days = sort_days(days)
-                    for i in days:
-                        rez += f"<b>{day_dict[i]}\n</b>"
-                        for k in lessons[i]:
-                            j, o = k['lesson'], k['time']
-                            try:
-                                rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                                       f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
-                                       f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                            except Exception as er:
-                                error_log(er)
-                        rez += "------------------------\n"
-                except Exception as er:
-                    error_log(er)
-                    try:
-                        bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
-                    except Exception as err:
-                        error_log(err)
-                if len(rez) > 50:
-                    bot.send_message(user_id, rez, parse_mode="HTML")
-                else:
-                    bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
-            elif "next_week" in message.text.lower() or commands[3] in message.text.lower():
-                res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/next_week")
-                lessons = res.json()
-                rez, days = "", []
-                try:
-                    for i in lessons:
-                        days.append(i)
-                    days = sort_days(days)
-                    for i in days:
-                        rez += f"<b>{day_dict[i]}\n</b>"
-                        for k in lessons[i]:
-                            j, o = k['lesson'], k['time']
-                            try:
-                                rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
-                                       f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
-                                       f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
-                            except Exception as er:
-                                error_log(er)
-                        rez += "------------------------\n"
-                except Exception as er:
-                    error_log(er)
-                    try:
-                        bot.send_message(user_id, f"{sm}А ой, ошиб04ка")
-                    except Exception as err:
-                        error_log(err)
-                if len(rez) > 50:
-                    bot.send_message(user_id, rez, parse_mode="HTML")
-                else:
-                    bot.send_message(user_id, f"{sm}<b>Пар не обнаружено</b>", parse_mode="HTML")
+                get_week_schedule(user_id, "week", group)
+            elif "next_week" in message.text.lower():
+                get_week_schedule(user_id, "next_week", group)
         else:
             if message.chat.type == "private":
                 bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
