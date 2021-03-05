@@ -26,7 +26,7 @@ print(bot.get_me())
 def db_connect():  # функция подключения к первой базе данных
     try:
         con = psycopg2.connect(
-            host="ec2-3-232-163-23.compute-1.amazonaws.com",
+            host="ec2-52-203-27-62.compute-1.amazonaws.com",
             database=str(os.environ.get('DB')),
             user=str(os.environ.get('DB_user')),
             port="5432",
