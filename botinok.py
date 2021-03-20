@@ -264,7 +264,7 @@ def handler_text(message):
                     error_log(er)
                     bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
-                if group.lower() == "none":
+                if group.lower() == "none" or group.lower() is None:
                     bot.send_message(user_id, f"{sm}У вас не указана группа\n{text}, чтобы указать группу")
                     return
             except Exception as er:
