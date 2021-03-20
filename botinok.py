@@ -204,6 +204,8 @@ def get_schedule(day, group, title):
             schedule += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
                    f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
                    f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+        except TypeError:
+            pass
         except Exception as er:
             error_log(er)
     return schedule
@@ -225,6 +227,8 @@ def get_week_schedule(user_id, week, group):
                     rez += f"<b>{number_of_lesson(o['start'])} (<code>{j['classRoom']}</code>" \
                            f"{get_time_ico(o['start'])}{o['start']} - {o['end']})</b>\n{j['name']} " \
                            f"({j['type']})\n{get_teacher_ico(j['teacher'])} {j['teacher']}\n\n"
+                except TypeError:
+                    pass
                 except Exception as er:
                     error_log(er)
             rez += "------------------------\n"
