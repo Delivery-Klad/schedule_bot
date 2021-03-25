@@ -4,12 +4,13 @@ import psycopg2
 import os
 import linecache
 import sys
-import datetime
+from datetime import datetime, timedelta
 
 
 bot = telebot.TeleBot(str(os.environ.get('TOKEN')))
 sm = "🤖"
 group_list = []
+admins_list = [496537969]
 commands = ["сегодня", "завтра", "на неделю"]
 day_dict = {"monday": "Понедельник",
             "tuesday": "Вторник",
@@ -20,7 +21,16 @@ day_dict = {"monday": "Понедельник",
             "sunday": "Воскресенье"}
 lesson_dict = {"9:": "1", "10": "2", "12": "3", "14": "4", "16": "5", "18": "6", "19": "7", "20": "8"}
 time_dict = {"9:": "🕘", "10": "🕦", "12": "🕐", "14": "🕝", "16": "🕟", "18": "🕕", "19": "🕢", "20": "🕘"}
+delimiter = "------------------------------------------------"
+time_difference = 3
 print(bot.get_me())
+
+
+def isAdmin(user_id):
+    if user_id in admins_list:
+        return True
+    else:
+        return False
 
 
 def db_connect():  # функция подключения к первой базе данных
@@ -42,6 +52,7 @@ def create_tables():
     connect, cursor = db_connect()
     cursor.execute("CREATE TABLE IF NOT EXISTS users(username TEXT, first_name TEXT,"
                    "last_name TEXT, grp TEXT, ids BIGINT)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS errors(reason TEXT)")
     connect.commit()
     cursor.close()
     connect.close()
@@ -51,27 +62,75 @@ def error_log(er):
     try:
         if "string indices must be integers" in str(er):
             return
-        print(er)
         exc_type, exc_obj, tb = sys.exc_info()
-        f = tb.tb_frame
+        frame = tb.tb_frame
         linenos = tb.tb_lineno
-        filename = f.f_code.co_filename
+        filename = frame.f_code.co_filename
         linecache.checkcache(filename)
-        line = linecache.getline(filename, linenos, f.f_globals)
+        line = linecache.getline(filename, linenos, frame.f_globals)
         reason = f"EXCEPTION IN ({filename}, LINE {linenos} '{line.strip()}'): {exc_obj}"
-        print(reason)
+        connect, cursor = db_connect()
+        temp_date = correctTimeZone()
+        data_time = temp_date.split()
+        cursor.execute(f"INSERT INTO Errors VALUES('{data_time[0]}', '{data_time[1]}', $taG${reason}$taG$)")
+        connect.commit()
+        cursor.close()
+        connect.close()
+        print(f"{delimiter}\n{temp_date}\n{reason}\n")
     except Exception as er:
         print(f"{er} ошибка в обработчике ошибок. ЧТО?")
 
 
+def log(message):
+    try:
+        local_time = correctTimeZone()
+        msg = message.text
+        if message.from_user.username is not None:
+            name = f"{message.from_user.username}"
+        else:
+            name = f"{message.from_user.first_name} {message.from_user.last_name}"
+        print(f"{delimiter}\n{local_time}\nСообщение от {name}, (id = {message.from_user.id})\nТекст - {msg}")
+    except Exception as er:
+        error_log(er)
+
+
+def correctTimeZone():
+    try:
+        curr_time = datetime.now() + timedelta(hours=time_difference)
+        return str(curr_time.strftime("%d.%m.%Y %H:%M:%S"))
+    except Exception as er:
+        error_log(er)
+
+
 @bot.message_handler(commands=['db'])
 def handler_db(message):
-    if message.from_user.id == 496537969:
+    if isAdmin(message.from_user.id):
         create_tables()
         connect, cursor = db_connect()
         cursor.execute("SELECT * FROM users")
         for i in cursor.fetchall():
             print(i)
+        cursor.close()
+        connect.close()
+
+
+@bot.message_handler(commands=['errors'])
+def handler_errors(message):
+    sql_request = "COPY (SELECT * FROM errors) TO STDOUT WITH CSV HEADER"
+    if isAdmin(message.from_user.id):
+        connect, cursor = db_connect()
+        with open("temp/errors.csv", "w") as output_file:
+            cursor.copy_expert(sql_request, output_file)
+        with open("temp/errors.csv", "rb") as doc:
+            bot.send_document(chat_id=message.from_user.id, data=doc)
+        os.remove("temp/errors.csv")
+        cursor.execute("DELETE FROM errors")
+        connect.commit()
+        isolation_level = connect.isolation_level
+        connect.set_isolation_level(0)
+        cursor.execute("VACUUM FULL")
+        connect.set_isolation_level(isolation_level)
+        connect.commit()
         cursor.close()
         connect.close()
 
@@ -313,6 +372,7 @@ def handler_text(message):
         error_log(er)
 
 
+create_tables()
 try:
     while True:
         try:
