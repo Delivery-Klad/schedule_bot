@@ -312,7 +312,7 @@ def handler_text(message):
                 return
             set_group(message, message.from_user.id, message.text.upper())
         elif message.text[0] == "/" or message.text.lower() in commands:
-            day = datetime.datetime.today().weekday()
+            day = datetime.today().weekday()
             user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
             text = "/group" if message.chat.type == "private" else "/group (группа)"
             try:
