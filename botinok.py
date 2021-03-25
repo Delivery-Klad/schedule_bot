@@ -115,23 +115,26 @@ def handler_db(message):
 
 @bot.message_handler(commands=['errors'])
 def handler_errors(message):
-    sql_request = "COPY (SELECT * FROM errors) TO STDOUT WITH CSV HEADER"
-    if isAdmin(message.from_user.id):
-        connect, cursor = db_connect()
-        with open("temp/errors.csv", "w") as output_file:
-            cursor.copy_expert(sql_request, output_file)
-        with open("temp/errors.csv", "rb") as doc:
-            bot.send_document(chat_id=message.from_user.id, data=doc)
-        os.remove("temp/errors.csv")
-        cursor.execute("DELETE FROM errors")
-        connect.commit()
-        isolation_level = connect.isolation_level
-        connect.set_isolation_level(0)
-        cursor.execute("VACUUM FULL")
-        connect.set_isolation_level(isolation_level)
-        connect.commit()
-        cursor.close()
-        connect.close()
+    try:
+        sql_request = "COPY (SELECT * FROM errors) TO STDOUT WITH CSV HEADER"
+        if isAdmin(message.from_user.id):
+            connect, cursor = db_connect()
+            with open("temp/errors.csv", "w") as output_file:
+                cursor.copy_expert(sql_request, output_file)
+            with open("temp/errors.csv", "rb") as doc:
+                bot.send_document(chat_id=message.from_user.id, data=doc)
+            os.remove("temp/errors.csv")
+            cursor.execute("DELETE FROM errors")
+            connect.commit()
+            isolation_level = connect.isolation_level
+            connect.set_isolation_level(0)
+            cursor.execute("VACUUM FULL")
+            connect.set_isolation_level(isolation_level)
+            connect.commit()
+            cursor.close()
+            connect.close()
+    except Exception as er:
+        error_log(er)
 
 
 @bot.message_handler(commands=['start'])
