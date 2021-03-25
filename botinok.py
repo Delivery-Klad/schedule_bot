@@ -71,8 +71,7 @@ def error_log(er):
         reason = f"EXCEPTION IN ({filename}, LINE {linenos} '{line.strip()}'): {exc_obj}"
         connect, cursor = db_connect()
         temp_date = correctTimeZone()
-        data_time = temp_date.split()
-        cursor.execute(f"INSERT INTO Errors VALUES('{data_time[0]}', '{data_time[1]}', $taG${reason}$taG$)")
+        cursor.execute(f"INSERT INTO Errors VALUES($taG${reason}$taG$)")
         connect.commit()
         cursor.close()
         connect.close()
