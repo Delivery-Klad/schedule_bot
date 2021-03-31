@@ -366,10 +366,10 @@ def handler_text(message):
                         bot.send_message(user_id, f"{sm}<b>{text}</b>", parse_mode="HTML")
                     else:
                         error_log(er)
-            elif "week" in message.text.lower() or commands[2] in message.text.lower():
-                get_week_schedule(user_id, "week", group)
             elif "next_week" in message.text.lower():
                 get_week_schedule(user_id, "next_week", group)
+            elif "week" in message.text.lower() or commands[2] in message.text.lower():
+                get_week_schedule(user_id, "week", group)
         else:
             if message.chat.type == "private":
                 bot.send_message(message.from_user.id, f"{sm}<b>Я вас не понял</b>", parse_mode="HTML")
