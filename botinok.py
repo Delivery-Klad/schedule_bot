@@ -259,12 +259,12 @@ def set_group(message, user_id, group):
 @bot.message_handler(commands=['which_week'])
 def get_week(message):
     try:
-        week = int(datetime.now().strftime("%V"))
+        week = int((datetime.now() + timedelta(hours=time_difference)).strftime("%V"))
         if week < 39:
             week -= 5
         else:
             week -= 38
-        bot.send_message(message.from_user.id, f"<b>{week}</b> неделя", parse_mode="HTML")
+        bot.send_message(message.chat.id, f"<b>{week}</b> неделя", parse_mode="HTML")
     except Exception as er:
         error_log(er)
 
