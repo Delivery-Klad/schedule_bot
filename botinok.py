@@ -388,15 +388,15 @@ def handler_text(message):
                         error_log(er)
             elif "next_week" in message.text.lower():
                 get_week_schedule(user_id, "next_week", group)
-            elif "week" in message.text.lower() or commands[2] in message.text.lower():
-                get_week_schedule(user_id, "week", group)
             elif "weeknum" in message.text.lower():
                 try:
                     week = int(message.text.split()[0])
+                    get_week_schedule(user_id, f"{week}/week_num", group)
                 except Exception as er:
                     error_log(er)
                     bot.send_message(user_id, f"{sm}<b>Неверный ввод</b>", parse_mode="HTML")
-                get_week_schedule(user_id, f"{week}/week_num", group)
+            elif "week" in message.text.lower() or commands[2] in message.text.lower():
+                get_week_schedule(user_id, "week", group)
         elif "week" in message.text.lower() or "неделя" in message.text.lower():
             get_week(message)
         else:
