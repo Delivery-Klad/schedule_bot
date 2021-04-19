@@ -294,7 +294,6 @@ def get_schedule(day, group, title):
 
 
 def get_week_schedule(user_id, week, group):
-    print(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{week}")
     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{week}")
     lessons = res.json()
     rez, days = "", []
@@ -390,7 +389,7 @@ def handler_text(message):
                 get_week_schedule(user_id, "next_week", group)
             elif "weeknum" in message.text.lower():
                 try:
-                    week = int(message.text.split()[0])
+                    week = int(message.text.split()[1])
                     get_week_schedule(user_id, f"{week}/week_num", group)
                 except Exception as er:
                     error_log(er)
