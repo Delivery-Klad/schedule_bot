@@ -140,6 +140,11 @@ def handler_errors(message):
         error_log(er)
 
 
+@bot.message_handler(commands=['help'])
+def handler_help(message):
+    pass
+
+
 @bot.message_handler(commands=['start'])
 def handler_start(message):
     user_id = message.from_user.id if message.chat.type == "private" else message.chat.id
@@ -289,6 +294,7 @@ def get_schedule(day, group, title):
 
 
 def get_week_schedule(user_id, week, group):
+    print(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{week}")
     res = requests.get(f"https://schedule-rtu.rtuitlab.dev/api/schedule/{group}/{week}")
     lessons = res.json()
     rez, days = "", []
