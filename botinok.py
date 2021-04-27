@@ -36,7 +36,7 @@ def isAdmin(user_id):
 def db_connect():  # функция подключения к первой базе данных
     try:
         con = psycopg2.connect(
-            host="ec2-52-203-27-62.compute-1.amazonaws.com",
+            host=str(os.environ.get('DB_host')),
             database=str(os.environ.get('DB')),
             user=str(os.environ.get('DB_user')),
             port="5432",
